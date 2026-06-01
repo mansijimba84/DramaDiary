@@ -12,4 +12,10 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+const authRoutes = require("./routes/auth");
+const reviewRoutes = require("./routes/reviewRoute");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/reviews", reviewRoutes);
+
 module.exports = app;
