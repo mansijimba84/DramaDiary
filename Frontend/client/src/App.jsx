@@ -10,7 +10,7 @@ function App() {
 
         <p>
           Coming soon... 🎬✨  
-          Track your favorite K-dramas, save reviews, and relive every emotional moment.
+          Track your favorite K-dramas, save reviews, and enjoy every moment.
         </p>
       </div>
     </section>
