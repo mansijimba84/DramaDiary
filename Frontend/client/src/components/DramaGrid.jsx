@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DramaGrid from "./components/DramaGrid";
 import "./App.css";
 
 function App() {
@@ -38,20 +39,16 @@ function App() {
     <section id="center">
       <div className="hero-text">
         <h1>DramaDiary</h1>
-
         <h3>Your K-drama journal</h3>
 
-        <p>
-          Coming soon... 🎬✨
-          <br />
-          Track your favorite K-dramas, save reviews, and enjoy every moment.
-        </p>
+        {/* 🔥 STATE 1: LOADING */}
+        {loading && <p className="loading">Loading dramas...</p>}
 
-        {loading && <p>Loading dramas...</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {!loading && !error && (
-          <p>Loaded {dramas.length} dramas successfully 🎉</p>
-        )}
+        {/* ❌ STATE 2: ERROR */}
+        {error && <p className="error">{error}</p>}
+
+        {/* ✅ STATE 3: SUCCESS */}
+        {!loading && !error && <DramaGrid dramas={dramas} />}
       </div>
     </section>
   );
