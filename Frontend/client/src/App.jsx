@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import DramaGrid from "./components/DramaGrid";
 import "./App.css";
+import logo from "./assets/tv-show.png"; // ✅ correct path (put inside src/assets)
 
 function App() {
   const [dramas, setDramas] = useState([]);
@@ -14,14 +15,11 @@ function App() {
 
         const apiKey = import.meta.env.VITE_TMDB_KEY;
 
-        console.log("API KEY:", apiKey); // DEBUG
-
         const response = await fetch(
           `https://api.themoviedb.org/3/discover/tv?with_original_language=ko&sort_by=popularity.desc&api_key=${apiKey}`
         );
 
         const data = await response.json();
-        console.log("TMDB DATA:", data); // DEBUG
 
         if (!response.ok) {
           throw new Error(data?.status_message || "Failed to fetch dramas");
@@ -40,24 +38,40 @@ function App() {
   }, []);
 
   return (
-    <section id="center">
-      <div className="hero-text">
-        <h1>DramaDiary</h1>
-        <h3>Your K-drama journal</h3>
+    <div className="app">
+      <header className="header">
+        <div className="brand">
+          <img src={logo} alt="Drama Diary logo" className="logo-img" />
+          <h1 className="logo-text">Drama Diary</h1>
+        </div>
+      </header>
+       <p className="subtitle">Fresh K-Drama discoveries, curated for you</p>
 
-        {loading && <p className="loading">Loading dramas...</p>}
+      <main className="container">
+        {loading && (
+          <div className="state">
+            <div className="loader"></div>
+            <p>Loading dramas...</p>
+          </div>
+        )}
 
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <div className="state error">
+            <p>{error}</p>
+          </div>
+        )}
 
         {!loading && !error && dramas.length > 0 && (
           <DramaGrid dramas={dramas} />
         )}
 
         {!loading && !error && dramas.length === 0 && (
-          <p>No dramas found</p>
+          <div className="state">
+            <p>No dramas found</p>
+          </div>
         )}
-      </div>
-    </section>
+      </main>
+    </div>
   );
 }
 
