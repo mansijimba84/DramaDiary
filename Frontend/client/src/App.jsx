@@ -1,41 +1,62 @@
 import { useState, useEffect } from "react";
 import DramaGrid from "./components/DramaGrid";
 import "./App.css";
-import logo from "./assets/tv-show.png"; // ✅ correct path (put inside src/assets)
+import logo from "./assets/tv-show.png"; 
+import SearchBar from "./components/SearchBar";
 
 function App() {
   const [dramas, setDramas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
 
   useEffect(() => {
-    const fetchDramas = async () => {
-      try {
-        setLoading(true);
+  const timer = setTimeout(() => {
+    setDebouncedQuery(searchQuery);
+  }, 300);
 
-        const apiKey = import.meta.env.VITE_TMDB_KEY;
+  return () => clearTimeout(timer);
+}, [searchQuery]);
 
-        const response = await fetch(
-          `https://api.themoviedb.org/3/discover/tv?with_original_language=ko&sort_by=popularity.desc&api_key=${apiKey}`
-        );
+useEffect(() => {
+  const fetchDramas = async () => {
+    try {
+      setLoading(true);
 
-        const data = await response.json();
+      const apiKey = import.meta.env.VITE_TMDB_KEY;
 
-        if (!response.ok) {
-          throw new Error(data?.status_message || "Failed to fetch dramas");
-        }
+      let url;
 
-        setDramas(data.results || []);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (searchQuery.trim() === "") {
+        // Popular Korean dramas
+        url = `https://api.themoviedb.org/3/discover/tv?with_original_language=ko&sort_by=popularity.desc&api_key=${apiKey}`;
+      } else {
+        // Search dramas
+        url = `https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(
+          searchQuery
+        )}&api_key=${apiKey}`;
       }
-    };
 
-    fetchDramas();
-  }, []);
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.status_message || "Failed to fetch dramas");
+      }
+
+      setDramas(data.results || []);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDramas();
+}, [debouncedQuery]);
 
   return (
     <div className="app">
@@ -48,6 +69,7 @@ function App() {
        <p className="subtitle">Fresh K-Drama discoveries, curated for you</p>
 
       <main className="container">
+        <SearchBar onSearch={setSearchQuery} />
         {loading && (
           <div className="state">
             <div className="loader"></div>
