@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600&display=swap');
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #bbedf0;
+  color: white;
+}
+
+/* BRAND */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* logo image */
+.nav-logo {
+  width: 32px;
+  height: 32px;
+}
+
+/* title font */
+.nav-title {
+ font-family: "Pacifico", cursive;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #0f5c76; /* mint */
+  letter-spacing: 0.5px;
+}
+
+/* LINKS */
+.nav-links a {
+  margin-left: 15px;
+  text-decoration: none;
+  color: #0f6960;
+  font-weight: 500;
+}
+
+.nav-links a.active {
+  color: white;
+  border-bottom: 2px solid white;
+  padding-bottom: 3px;
+}

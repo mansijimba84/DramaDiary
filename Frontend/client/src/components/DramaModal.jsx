@@ -4,6 +4,11 @@ function DramaModal({ drama, onClose }) {
   const [details, setDetails] = useState(null);
   const [cast, setCast] = useState([]);
 
+  // ⭐ NEW: status state
+  const [status, setStatus] = useState(() => {
+    return localStorage.getItem(`drama-${drama?.id}`) || null;
+  });
+
   useEffect(() => {
     if (!drama) return;
 
@@ -34,83 +39,106 @@ function DramaModal({ drama, onClose }) {
   }, [drama]);
 
   useEffect(() => {
-  const handleEscape = (e) => {
-    if (e.key === "Escape") {
-      onClose();
-    }
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "auto";
+    };
+  }, [onClose]);
+
+  // ⭐ NEW: save status
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    localStorage.setItem(`drama-${drama.id}`, value);
   };
 
-  document.addEventListener("keydown", handleEscape);
+  if (!details) return null;
 
-  document.body.style.overflow = "hidden";
-
-  return () => {
-    document.removeEventListener("keydown", handleEscape);
-    document.body.style.overflow = "auto";
-  };
-}, [onClose]);
-
-if (!details) {
-  return null;
-}
-
-return (
-  <div className="modal-backdrop" onClick={onClose}>
-    <div
-      className="modal-content"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        className="close-btn"
-        onClick={onClose}
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
       >
-        ×
-      </button>
+        <button className="close-btn" onClick={onClose}>
+          ×
+        </button>
 
-      <h2>{details.name}</h2>
+        <h2>{details.name}</h2>
 
-      <img
-        src={`https://image.tmdb.org/t/p/w500${details.poster_path}`}
-        alt={details.name}
-        className="modal-poster"
-      />
+        <img
+          src={`https://image.tmdb.org/t/p/w500${details.poster_path}`}
+          alt={details.name}
+          className="modal-poster"
+        />
 
-      <p>{details.overview}</p>
+        <p>{details.overview}</p>
 
-      <div className="drama-info">
-        <p>
-          <strong>Seasons:</strong> {details.number_of_seasons}
-        </p>
+        {/* ⭐ STATUS BUTTONS */}
+        <div className="status-buttons">
+          <button
+            className={status === "plan" ? "active" : ""}
+            onClick={() => handleStatusChange("plan")}
+          >
+            Plan to Watch
+          </button>
 
-        <p>
-          <strong>Episodes:</strong> {details.number_of_episodes}
-        </p>
+          <button
+            className={status === "watching" ? "active" : ""}
+            onClick={() => handleStatusChange("watching")}
+          >
+            Watching
+          </button>
 
-        <p>
-          <strong>Genres:</strong>{" "}
-          {details.genres?.map((g) => g.name).join(", ")}
-        </p>
-      </div>
+          <button
+            className={status === "watched" ? "active" : ""}
+            onClick={() => handleStatusChange("watched")}
+          >
+            Watched
+          </button>
+        </div>
 
-      <h3>Cast</h3>
+        <div className="drama-info">
+          <p>
+            <strong>Seasons:</strong> {details.number_of_seasons}
+          </p>
 
-      <div className="cast-grid">
-        {cast.map((person) => (
-          <div key={person.id} className="cast-card">
-            {person.profile_path && (
-              <img
-                src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
-                alt={person.name}
-              />
-            )}
+          <p>
+            <strong>Episodes:</strong> {details.number_of_episodes}
+          </p>
 
-            <p>{person.name}</p>
-          </div>
-        ))}
+          <p>
+            <strong>Genres:</strong>{" "}
+            {details.genres?.map((g) => g.name).join(", ")}
+          </p>
+        </div>
+
+        <h3>Cast</h3>
+
+        <div className="cast-grid">
+          {cast.map((person) => (
+            <div key={person.id} className="cast-card">
+              {person.profile_path && (
+                <img
+                  src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
+                  alt={person.name}
+                />
+              )}
+              <p>{person.name}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default DramaModal;
