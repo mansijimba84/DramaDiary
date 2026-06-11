@@ -14,7 +14,7 @@
 /* HEADER */
 .header {
   width: 100%;
-  padding: 18px 60px;
+  padding: 18px 30px;
   box-sizing: border-box;
 }
 
@@ -50,9 +50,9 @@
   color: #64748b;
 }
 
-main {
+.main {
   width: 100%;
-  padding: 30px 60px;
+  padding: 20px 30px;
   box-sizing: border-box;
 }
 
@@ -91,7 +91,8 @@ main {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  padding: 30px;
+  padding: 0px;
+
 }
 
 /* CARD */
