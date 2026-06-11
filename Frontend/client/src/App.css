@@ -295,23 +295,210 @@
     transform: translateY(0);
   }
 }
-
 .status-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin: 15px 0;
+  flex-wrap: wrap;
 }
 
 .status-buttons button {
-  padding: 8px 12px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 999px;
   cursor: pointer;
-  background: #ddd;
   font-weight: 500;
+  font-size: 14px;
+  color: #02353e;
+  background: linear-gradient(145deg, #f0f0f0, #e2e2e2);
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08),
+              -3px -3px 8px rgba(255, 255, 255, 0.8);
+  transition: all 0.25s ease;
+}
+
+.status-buttons button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, #1a7471, #e6e6e6);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.12),
+              -4px -4px 10px rgba(255, 255, 255, 0.9);
+}
+
+.status-buttons button:active {
+  transform: scale(0.96);
 }
 
 .status-buttons button.active {
-  background: #111;
+  background: linear-gradient(135deg, #a1f0ed, #333);
   color: white;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* PAGE BACKGROUND (match browse page) */
+.mylist-page {
+  min-height: 100vh;
+  background: #f6fffb;
+  padding: 40px 20px 60px;
+  font-family: "Poppins", sans-serif;
+  color: #0f172a;
+}
+/* CENTER CONTAINER */
+.mylist-container {
+  width: 100%;
+  max-width: 1100px;
+}
+.mylist-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 40px;
+}
+/* TITLE (NEW FONT STYLE) */
+.page-title {
+  font-size: 38px;
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  color: #0f5c76;
+  margin: 0;
+}
+
+/* CONTENT WRAPPER */
+.mylist-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+/* SECTION CARD (LIGHT STYLE) */
+.section {
+  margin-bottom: 45px;
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eaf7f3;
+}
+
+/* SECTION TITLE */
+.section-title {
+  font-size: 20px;
+  margin-bottom: 18px;
+  padding-left: 10px;
+  border-left: 4px solid #14b8a6;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* ROW SCROLL (clean white style) */
+.row {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+}
+
+.row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.row::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* CARD (MATCH BROWSE STYLE) */
+.card {
+  min-width: 190px;
+  flex: 0 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #eaf7f3;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  transition: all 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 35px rgba(20, 184, 166, 0.15);
+}
+
+/* IMAGE */
+.card img {
+  width: 100%;
+  height: 270px;
+  object-fit: cover;
+}
+
+/* CONTENT */
+.card-content {
+  padding: 10px;
+}
+
+.card-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+/* DROPDOWN (CLEAN UI STYLE) */
+select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  border: 2px solid #d1fae5;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  outline: none;
+  transition: 0.2s;
+}
+
+select:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+}
+
+/* REMOVE BUTTON (CLEAN + NICE) */
+.remove-btn {
+  width: 100%;
+  padding: 9px;
+  border: none;
+  border-radius: 999px;
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: #dc2626;
+  transform: scale(1.03);
+}
+
+/* EMPTY STATE */
+.empty-box {
+  text-align: center;
+  padding: 40px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eaf7f3;
+  color: #64748b;
+}
+
+.browse-link {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #14b8a6;
+  color: white;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.browse-link:hover {
+  background: #0f766e;
 }

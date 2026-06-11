@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
+import useLocalStorage from "../hooks/LocalStorage";
 
 function DramaModal({ drama, onClose }) {
   const [details, setDetails] = useState(null);
   const [cast, setCast] = useState([]);
 
-  // ⭐ NEW: status state
-  const [status, setStatus] = useState(() => {
-    return localStorage.getItem(`drama-${drama?.id}`) || null;
-  });
+  const [dramas, setDramas] = useLocalStorage("dramaList", []);
+
+  const status =
+    dramas.find((item) => item.id === drama?.id)?.status || null;
 
   useEffect(() => {
     if (!drama) return;
@@ -54,10 +55,33 @@ function DramaModal({ drama, onClose }) {
     };
   }, [onClose]);
 
-  // ⭐ NEW: save status
   const handleStatusChange = (value) => {
-    setStatus(value);
-    localStorage.setItem(`drama-${drama.id}`, value);
+    const title = drama.name || drama.original_name || "Untitled";
+
+    setDramas((prev) => {
+      const exists = prev.find((item) => item.id === drama.id);
+
+      if (exists) {
+        return prev.map((item) =>
+          item.id === drama.id
+            ? {
+                ...item,
+                status: value,
+              }
+            : item
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          id: drama.id,
+          title,
+          poster: drama.poster_path,
+          status: value,
+        },
+      ];
+    });
   };
 
   if (!details) return null;
@@ -82,7 +106,7 @@ function DramaModal({ drama, onClose }) {
 
         <p>{details.overview}</p>
 
-        {/* ⭐ STATUS BUTTONS */}
+        {/* STATUS BUTTONS */}
         <div className="status-buttons">
           <button
             className={status === "plan" ? "active" : ""}
