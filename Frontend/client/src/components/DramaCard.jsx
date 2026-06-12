@@ -1,35 +1,55 @@
-import React from "react";
-import useLocalStorage from "../hooks/LocalStorage";
+import React, { useEffect, useState } from "react";
 
 const DramaCard = ({ drama, onClick }) => {
-  const [dramas, setDramas] = useLocalStorage("dramaList", []);
+  const [storedList, setStoredList] = useState([]);
+
+  useEffect(() => {
+    const update = () => {
+      const data = JSON.parse(
+        localStorage.getItem("dramaList") || "[]"
+      );
+      setStoredList(data);
+    };
+
+    update(); // initial load
+
+    window.addEventListener("storage-update", update);
+
+    return () =>
+      window.removeEventListener("storage-update", update);
+  }, []);
+
+  const activeStatus = storedList.find(
+    (item) => item.id === drama.id
+  )?.status;
+
+  const title =
+    drama.name || drama.original_name || "Untitled";
 
   const posterUrl = drama.poster_path
     ? `https://image.tmdb.org/t/p/w500${drama.poster_path}`
     : null;
 
-  const title = drama.name || drama.original_name || "Untitled";
-
-  const year = drama.first_air_date
-    ? drama.first_air_date.slice(0, 4)
-    : "N/A";
-
   const handleStatus = (e, status) => {
     e.stopPropagation();
 
-    setDramas((prev) => {
-      const exists = prev.find((item) => item.id === drama.id);
+    const current = JSON.parse(
+      localStorage.getItem("dramaList") || "[]"
+    );
 
-      if (exists) {
-        return prev.map((item) =>
-          item.id === drama.id
-            ? { ...item, status, title, poster: drama.poster_path }
-            : item
-        );
-      }
+    const exists = current.find((item) => item.id === drama.id);
 
-      return [
-        ...prev,
+    let updated;
+
+    if (exists) {
+      updated = current.map((item) =>
+        item.id === drama.id
+          ? { ...item, status, title, poster: drama.poster_path }
+          : item
+      );
+    } else {
+      updated = [
+        ...current,
         {
           id: drama.id,
           title,
@@ -37,33 +57,21 @@ const DramaCard = ({ drama, onClick }) => {
           status,
         },
       ];
-    });
+    }
+
+    localStorage.setItem("dramaList", JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage-update"));
   };
 
-  const activeStatus = dramas.find((item) => item.id === drama.id)?.status;
-
-  const isInList = !!activeStatus;
-
   return (
-    <div className="drama-card" onClick={onClick} style={{ position: "relative" }}>
-      
-      {/* BADGE */}
-      {isInList && <div className="badge">In List</div>}
+    <div className="drama-card" onClick={onClick}>
+      {activeStatus && <div className="badge">In List</div>}
 
-      {posterUrl ? (
-        <img src={posterUrl} alt={title} className="drama-poster" />
-      ) : (
-        <div className="poster-placeholder">
-          <span>{title}</span>
-        </div>
-      )}
+      <img src={posterUrl} className="drama-poster" />
 
       <div className="drama-info">
         <h3>{title}</h3>
-        <p>Year: {year}</p>
-        <p>⭐ {drama.vote_average ? drama.vote_average.toFixed(1) : "N/A"}</p>
 
-        {/* STATUS BUTTONS */}
         <div className="status-buttons">
           <button
             className={activeStatus === "watching" ? "active" : ""}

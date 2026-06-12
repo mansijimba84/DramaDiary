@@ -10,6 +10,9 @@ function DramaModal({ drama, onClose }) {
   const status =
     dramas.find((item) => item.id === drama?.id)?.status || null;
 
+  // =========================
+  // FETCH DRAMA DETAILS
+  // =========================
   useEffect(() => {
     if (!drama) return;
 
@@ -20,67 +23,78 @@ function DramaModal({ drama, onClose }) {
         const detailsRes = await fetch(
           `https://api.themoviedb.org/3/tv/${drama.id}?api_key=${apiKey}`
         );
-
         const detailsData = await detailsRes.json();
 
         const castRes = await fetch(
           `https://api.themoviedb.org/3/tv/${drama.id}/credits?api_key=${apiKey}`
         );
-
         const castData = await castRes.json();
 
         setDetails(detailsData);
         setCast(castData.cast?.slice(0, 5) || []);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
       }
     };
 
     fetchData();
   }, [drama]);
 
+  // =========================
+  // ESC CLOSE MODAL
+  // =========================
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
     };
 
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "auto";
     };
   }, [onClose]);
 
+  // =========================
+  // STATUS UPDATE (FIXED + SYNC)
+  // =========================
   const handleStatusChange = (value) => {
-    const title = drama.name || drama.original_name || "Untitled";
+    const title =
+      drama.name || drama.original_name || "Untitled";
 
     setDramas((prev) => {
       const exists = prev.find((item) => item.id === drama.id);
 
+      let updated;
+
       if (exists) {
-        return prev.map((item) =>
+        updated = prev.map((item) =>
           item.id === drama.id
-            ? {
-                ...item,
-                status: value,
-              }
+            ? { ...item, status: value }
             : item
         );
+      } else {
+        updated = [
+          ...prev,
+          {
+            id: drama.id,
+            title,
+            poster: drama.poster_path,
+            status: value,
+          },
+        ];
       }
 
-      return [
-        ...prev,
-        {
-          id: drama.id,
-          title,
-          poster: drama.poster_path,
-          status: value,
-        },
-      ];
+      // 🔥 IMPORTANT: trigger global update for DramaCard + MyList
+      localStorage.setItem(
+        "dramaList",
+        JSON.stringify(updated)
+      );
+      window.dispatchEvent(new Event("storage-update"));
+
+      return updated;
     });
   };
 
@@ -106,13 +120,15 @@ function DramaModal({ drama, onClose }) {
 
         <p>{details.overview}</p>
 
-        {/* STATUS BUTTONS */}
+        {/* =========================
+            STATUS BUTTONS
+        ========================= */}
         <div className="status-buttons">
           <button
             className={status === "plan" ? "active" : ""}
             onClick={() => handleStatusChange("plan")}
           >
-            Plan to Watch
+            Plan
           </button>
 
           <button
@@ -130,13 +146,18 @@ function DramaModal({ drama, onClose }) {
           </button>
         </div>
 
+        {/* =========================
+            DETAILS
+        ========================= */}
         <div className="drama-info">
           <p>
-            <strong>Seasons:</strong> {details.number_of_seasons}
+            <strong>Seasons:</strong>{" "}
+            {details.number_of_seasons}
           </p>
 
           <p>
-            <strong>Episodes:</strong> {details.number_of_episodes}
+            <strong>Episodes:</strong>{" "}
+            {details.number_of_episodes}
           </p>
 
           <p>
@@ -145,6 +166,9 @@ function DramaModal({ drama, onClose }) {
           </p>
         </div>
 
+        {/* =========================
+            CAST
+        ========================= */}
         <h3>Cast</h3>
 
         <div className="cast-grid">

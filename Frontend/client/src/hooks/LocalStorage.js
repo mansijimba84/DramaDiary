@@ -1,30 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 export default function useLocalStorage(key, initialValue) {
-  const isFirstRender = useRef(true);
-
   const [value, setValue] = useState(() => {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : initialValue;
-    } catch {
-      return initialValue;
-    }
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
   });
 
-  // Save to localStorage ONLY when value changes (skip first render)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+  const setAndSync = (newValue) => {
+    setValue((prev) => {
+      const resolved =
+        typeof newValue === "function" ? newValue(prev) : newValue;
 
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error("localStorage save error:", error);
-    }
-  }, [key, value]);
+      localStorage.setItem(key, JSON.stringify(resolved));
 
-  return [value, setValue];
+      // 🔥 GLOBAL SYNC EVENT
+      window.dispatchEvent(new Event("storage-update"));
+
+      return resolved;
+    });
+  };
+
+  return [value, setAndSync];
 }

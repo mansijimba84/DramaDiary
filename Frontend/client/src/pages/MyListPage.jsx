@@ -26,22 +26,15 @@ const MyListPage = () => {
 
         {filtered.length === 0 ? (
           <div className="empty-box">
-            <p>No dramas here yet — go find one</p>
-            <Link to="/" className="browse-link">
-              Browse Collection
-            </Link>
+            <p>No dramas here yet</p>
+            <Link to="/">Browse</Link>
           </div>
         ) : (
           <div className="row">
             {filtered.map((drama) => (
               <div key={drama.id} className="card">
                 <img
-                  src={
-                    drama.poster
-                      ? `https://image.tmdb.org/t/p/w300${drama.poster}`
-                      : "https://via.placeholder.com/300x450"
-                  }
-                  alt={drama.title}
+                  src={`https://image.tmdb.org/t/p/w300${drama.poster}`}
                 />
 
                 <div className="card-content">
@@ -53,7 +46,7 @@ const MyListPage = () => {
                       changeStatus(drama.id, e.target.value)
                     }
                   >
-                    <option value="plan">Plan to Watch</option>
+                    <option value="plan">Plan</option>
                     <option value="watching">Watching</option>
                     <option value="watched">Watched</option>
                   </select>
@@ -75,19 +68,15 @@ const MyListPage = () => {
 
   return (
     <div className="mylist-page">
-
-      {/* 🔥 FIXED HEADER (always top center) */}
       <header className="mylist-header">
         <h1 className="page-title">My Drama List</h1>
       </header>
 
-      {/* PAGE CONTENT */}
       <div className="mylist-content">
-        {renderSection("Plan to Watch", "plan")}
+        {renderSection("Plan", "plan")}
         {renderSection("Watching", "watching")}
         {renderSection("Watched", "watched")}
       </div>
-
     </div>
   );
 };
