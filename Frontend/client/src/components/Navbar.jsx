@@ -28,6 +28,14 @@ function Navbar() {
         >
           My List
         </Link>
+
+        {/* ⭐ NEW STATS LINK */}
+        <Link
+          to="/stats"
+          className={location.pathname === "/stats" ? "active" : ""}
+        >
+          Stats
+        </Link>
       </div>
     </nav>
   );
