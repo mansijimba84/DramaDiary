@@ -12,9 +12,15 @@ const MyListPage = () => {
   const changeStatus = (id, status) => {
     setDramas((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, status } : item
+        item.id === id
+          ? { ...item, status, updatedAt: new Date().toISOString() }
+          : item
       )
     );
+  };
+
+  const renderStars = (rating = 0) => {
+    return "★".repeat(rating) + "☆".repeat(5 - rating);
   };
 
   const renderSection = (title, status) => {
@@ -33,13 +39,17 @@ const MyListPage = () => {
           <div className="row">
             {filtered.map((drama) => (
               <div key={drama.id} className="card">
+
+                {/* POSTER */}
                 <img
                   src={`https://image.tmdb.org/t/p/w300${drama.poster}`}
+                  alt={drama.title}
                 />
 
                 <div className="card-content">
                   <h3>{drama.title}</h3>
 
+                  {/* STATUS SELECT */}
                   <select
                     value={drama.status}
                     onChange={(e) =>
@@ -51,6 +61,37 @@ const MyListPage = () => {
                     <option value="watched">Watched</option>
                   </select>
 
+                  {/* ⭐ REVIEW SECTION */}
+                  {drama.status === "watched" && (
+                    <div style={{ marginTop: "8px" }}>
+
+                      {/* STARS */}
+                      <div
+                        style={{
+                          color: "#facc15",
+                          fontSize: "24px",
+                          marginBottom: "4px"
+                        }}
+                      >
+                        {renderStars(drama.rating || 0)}
+                      </div>
+
+                      {/* REVIEW TEXT */}
+                      {drama.reviewText && (
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "#555",
+                            lineHeight: "1.4"
+                          }}
+                        >
+                          {drama.reviewText}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* REMOVE BUTTON */}
                   <button
                     className="remove-btn"
                     onClick={() => removeDrama(drama.id)}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import useLocalStorage from "../hooks/LocalStorage";
+import StarRating from "./StarRating";
 
 function DramaModal({ drama, onClose }) {
   const [details, setDetails] = useState(null);
@@ -7,72 +8,74 @@ function DramaModal({ drama, onClose }) {
 
   const [dramas, setDramas] = useLocalStorage("dramaList", []);
 
-  const status =
-    dramas.find((item) => item.id === drama?.id)?.status || null;
+  const existing = dramas.find((d) => d.id === drama?.id);
+  const status = existing?.status || null;
 
-  // =========================
-  // FETCH DRAMA DETAILS
-  // =========================
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+
+  // reset when drama changes
+  useEffect(() => {
+    if (existing) {
+      setRating(existing.rating || 0);
+      setReviewText(existing.reviewText || "");
+    } else {
+      setRating(0);
+      setReviewText("");
+    }
+  }, [drama?.id]);
+
+  // fetch data
   useEffect(() => {
     if (!drama) return;
 
     const apiKey = import.meta.env.VITE_TMDB_KEY;
 
     const fetchData = async () => {
-      try {
-        const detailsRes = await fetch(
-          `https://api.themoviedb.org/3/tv/${drama.id}?api_key=${apiKey}`
-        );
-        const detailsData = await detailsRes.json();
+      const detailsRes = await fetch(
+        `https://api.themoviedb.org/3/tv/${drama.id}?api_key=${apiKey}`
+      );
+      const detailsData = await detailsRes.json();
 
-        const castRes = await fetch(
-          `https://api.themoviedb.org/3/tv/${drama.id}/credits?api_key=${apiKey}`
-        );
-        const castData = await castRes.json();
+      const castRes = await fetch(
+        `https://api.themoviedb.org/3/tv/${drama.id}/credits?api_key=${apiKey}`
+      );
+      const castData = await castRes.json();
 
-        setDetails(detailsData);
-        setCast(castData.cast?.slice(0, 5) || []);
-      } catch (err) {
-        console.error(err);
-      }
+      setDetails(detailsData);
+      setCast(castData.cast?.slice(0, 5) || []);
     };
 
     fetchData();
   }, [drama]);
 
-  // =========================
-  // ESC CLOSE MODAL
-  // =========================
+  // escape close
   useEffect(() => {
-    const handleKey = (e) => {
+    const handler = (e) => {
       if (e.key === "Escape") onClose();
     };
 
-    document.addEventListener("keydown", handleKey);
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "auto";
-    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // =========================
-  // STATUS UPDATE (FIXED + SYNC)
-  // =========================
-  const handleStatusChange = (value) => {
-    const title =
-      drama.name || drama.original_name || "Untitled";
+  const updateItem = (updates) => {
+    const title = drama.name || drama.original_name || "Untitled";
 
     setDramas((prev) => {
-      const exists = prev.find((item) => item.id === drama.id);
+      const exists = prev.find((d) => d.id === drama.id);
 
       let updated;
 
       if (exists) {
         updated = prev.map((item) =>
           item.id === drama.id
-            ? { ...item, status: value }
+            ? {
+                ...item,
+                ...updates,
+                updatedAt: new Date().toISOString(),
+              }
             : item
         );
       } else {
@@ -82,30 +85,43 @@ function DramaModal({ drama, onClose }) {
             id: drama.id,
             title,
             poster: drama.poster_path,
-            status: value,
+            status: updates.status || "plan",
+            rating: 0,
+            reviewText: "",
+            updatedAt: new Date().toISOString(),
+            ...updates,
           },
         ];
       }
 
-      // 🔥 IMPORTANT: trigger global update for DramaCard + MyList
-      localStorage.setItem(
-        "dramaList",
-        JSON.stringify(updated)
-      );
-      window.dispatchEvent(new Event("storage-update"));
-
+      localStorage.setItem("dramaList", JSON.stringify(updated));
       return updated;
     });
+  };
+
+  const handleStatusChange = (value) => {
+    updateItem({ status: value });
+  };
+
+  const handleSaveReview = () => {
+    updateItem({
+      rating,
+      reviewText,
+      status: "watched",
+    });
+
+    setShowPopup(true);
+    setRating(0);
+    setReviewText("");
+
+    setTimeout(() => setShowPopup(false), 2000);
   };
 
   if (!details) return null;
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="close-btn" onClick={onClose}>
           ×
         </button>
@@ -114,15 +130,12 @@ function DramaModal({ drama, onClose }) {
 
         <img
           src={`https://image.tmdb.org/t/p/w500${details.poster_path}`}
-          alt={details.name}
           className="modal-poster"
         />
 
         <p>{details.overview}</p>
 
-        {/* =========================
-            STATUS BUTTONS
-        ========================= */}
+        {/* STATUS */}
         <div className="status-buttons">
           <button
             className={status === "plan" ? "active" : ""}
@@ -146,44 +159,37 @@ function DramaModal({ drama, onClose }) {
           </button>
         </div>
 
-        {/* =========================
-            DETAILS
-        ========================= */}
-        <div className="drama-info">
-          <p>
-            <strong>Seasons:</strong>{" "}
-            {details.number_of_seasons}
-          </p>
+        {/* REVIEW SECTION */}
+        {status === "watched" && (
+          <div className="review-section">
+            <h3>Your Review</h3>
 
-          <p>
-            <strong>Episodes:</strong>{" "}
-            {details.number_of_episodes}
-          </p>
-
-          <p>
-            <strong>Genres:</strong>{" "}
-            {details.genres?.map((g) => g.name).join(", ")}
-          </p>
-        </div>
-
-        {/* =========================
-            CAST
-        ========================= */}
-        <h3>Cast</h3>
-
-        <div className="cast-grid">
-          {cast.map((person) => (
-            <div key={person.id} className="cast-card">
-              {person.profile_path && (
-                <img
-                  src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
-                  alt={person.name}
-                />
-              )}
-              <p>{person.name}</p>
+            <div className="star-rating">
+              <StarRating value={rating} onChange={setRating} />
             </div>
-          ))}
-        </div>
+
+            <textarea
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              placeholder="Write your review (optional)"
+              className="review-textarea"
+            />
+
+            <button
+              className="review-save-btn"
+              onClick={handleSaveReview}
+            >
+              Save Review
+            </button>
+          </div>
+        )}
+
+        {/* POPUP */}
+        {showPopup && (
+          <div className="review-popup">
+            Review Saved ✔
+          </div>
+        )}
       </div>
     </div>
   );
