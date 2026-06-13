@@ -5,11 +5,13 @@ const User = require("../models/User");
 exports.signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
     if (!username || !email || !password) {
       return res.status(400).json({
         message: "Username, email, and password are required",
       });
     }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -23,13 +25,19 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { _id: user._id },
+      process.env.SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // 🔥 FIX: remove password before sending user
+    const { password: _, ...safeUser } = user.toObject();
 
     return res.status(201).json({
       message: "User registered successfully",
       token,
+      user: safeUser, // ✅ THIS WAS MISSING (main bug)
     });
   } catch (error) {
     return res.status(500).json({
@@ -44,16 +52,25 @@ exports.login = async (req, res) => {
 
   try {
     const getUser = await User.findOne({ email });
-    if (!getUser)
-      return res
-        .status(403)
-        .json({ success: false, message: "User not found" });
 
-    const passwordCheck = await bcrypt.compare(password, getUser.password);
-    if (!passwordCheck)
-      return res
-        .status(403)
-        .json({ success: false, message: "Invalid credentials" });
+    if (!getUser) {
+      return res.status(403).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const passwordCheck = await bcrypt.compare(
+      password,
+      getUser.password
+    );
+
+    if (!passwordCheck) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
 
     const payload = {
       _id: getUser._id,
@@ -61,9 +78,12 @@ exports.login = async (req, res) => {
       role: getUser.role,
     };
 
-    const token = jwt.sign(payload, process.env.SECRET, { expiresIn: "7d" });
+    const token = jwt.sign(payload, process.env.SECRET, {
+      expiresIn: "7d",
+    });
 
-    const { password: pwd, ...userWithoutPassword } = getUser.toObject();
+    const { password: _, ...userWithoutPassword } =
+      getUser.toObject();
 
     return res.status(200).json({
       success: true,
@@ -72,6 +92,9 @@ exports.login = async (req, res) => {
       token,
     });
   } catch (err) {
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };

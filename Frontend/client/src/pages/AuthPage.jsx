@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -24,34 +26,45 @@ function Auth() {
       : "http://localhost:5050/api/auth/signup";
 
     const payload = isLogin
-      ? { email: formData.email, password: formData.password }
+      ? {
+          email: formData.email,
+          password: formData.password,
+        }
       : formData;
 
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message);
+        alert(data.message || "Authentication failed");
         return;
       }
 
+      // ✅ store auth data
       localStorage.setItem("token", data.token);
+
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
+      // 🔥 IMPORTANT: notify navbar instantly
+      window.dispatchEvent(new Event("auth-change"));
+
       alert(isLogin ? "Login successful" : "Signup successful");
 
-      window.location.href = "/";
+      // redirect to browse
+      navigate("/");
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+      alert("Server not running or connection refused");
     }
   };
 
@@ -60,13 +73,16 @@ function Auth() {
       <div className="auth-container">
 
         {/* TITLE */}
-        <h2>{isLogin ? "Welcome Back " : "Create Account"}</h2>
+        <h2 className="auth-title">
+          {isLogin ? "Welcome Back 👋" : "Create Account ✨"}
+        </h2>
 
         {/* TABS */}
         <div className="auth-tabs">
           <button
             className={isLogin ? "active-tab" : ""}
             onClick={() => setIsLogin(true)}
+            type="button"
           >
             Login
           </button>
@@ -74,13 +90,14 @@ function Auth() {
           <button
             className={!isLogin ? "active-tab" : ""}
             onClick={() => setIsLogin(false)}
+            type="button"
           >
             Sign Up
           </button>
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
             <input
               type="text"
@@ -110,19 +127,17 @@ function Auth() {
             required
           />
 
-          <button type="submit">
+          <button type="submit" className="auth-btn">
             {isLogin ? "Login" : "Create Account"}
           </button>
         </form>
 
-        {/* SWITCH TEXT */}
-        <p
-          className="auth-switch"
-          onClick={() => setIsLogin(!isLogin)}
-        >
-          {isLogin
-            ? "Don't have an account? Sign up"
-            : "Already have an account? Login"}
+        {/* SWITCH */}
+        <p className="auth-switch">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          <span onClick={() => setIsLogin(!isLogin)}>
+            {isLogin ? "Sign up" : "Login"}
+          </span>
         </p>
       </div>
     </div>

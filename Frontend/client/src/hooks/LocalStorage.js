@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function useLocalStorage(key, initialValue) {
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const userKey = user?._id ? `${key}_${user._id}` : key;
+
   const [value, setValue] = useState(() => {
-    const stored = localStorage.getItem(key);
+    const stored = localStorage.getItem(userKey);
     return stored ? JSON.parse(stored) : initialValue;
   });
 
@@ -11,9 +14,8 @@ export default function useLocalStorage(key, initialValue) {
       const resolved =
         typeof newValue === "function" ? newValue(prev) : newValue;
 
-      localStorage.setItem(key, JSON.stringify(resolved));
+      localStorage.setItem(userKey, JSON.stringify(resolved));
 
-      // 🔥 GLOBAL SYNC EVENT
       window.dispatchEvent(new Event("storage-update"));
 
       return resolved;
