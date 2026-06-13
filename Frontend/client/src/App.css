@@ -688,3 +688,143 @@ select:focus {
   background: linear-gradient(135deg, #14b8a6, #0f766e);
   transition: width 0.3s ease;
 }
+/* PAGE BACKGROUND */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(135deg, #f6fffb, #e6fffa);
+  font-family: "Poppins", sans-serif;
+}
+
+/* MAIN CARD */
+.auth-container {
+  width: 420px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+
+  padding: 32px;
+  border-radius: 20px;
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+
+  border: 1px solid #eaf7f3;
+
+  animation: fadeUp 0.4s ease;
+}
+
+/* ANIMATION */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TITLE */
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 26px;
+  color: #0f766a;
+  font-weight: 600;
+}
+
+/* TABS */
+.auth-tabs {
+  display: flex;
+  margin-bottom: 25px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+  padding: 4px;
+}
+
+/* TAB BUTTONS */
+.auth-tabs button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+
+  background: transparent;
+  color: #475569;
+
+  font-weight: 600;
+  border-radius: 999px;
+
+  transition: all 0.25s ease;
+}
+
+/* ACTIVE TAB */
+.active-tab {
+  background: linear-gradient(135deg, #83eaea, #48c4bc) !important;
+  color: white !important;
+
+  box-shadow: 0 6px 15px rgba(20, 184, 168, 0.3);
+}
+
+/* INPUTS */
+.auth-container input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+
+  border: 2px solid #d1fae5;
+  border-radius: 12px;
+
+  outline: none;
+  font-size: 14px;
+
+  transition: 0.2s ease;
+  background: #fff;
+}
+
+.auth-container input:focus {
+  border-color: #29afad;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+}
+
+/* BUTTON */
+.auth-container button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #92dddb, #478d87);
+  color: white;
+
+  font-weight: 600;
+  font-size: 15px;
+
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+  margin-top: 10px;
+}
+
+.auth-container button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(120, 246, 246, 0.25);
+}
+
+/* SWITCH TEXT */
+.auth-switch {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 13px;
+  color: #64888b;
+  cursor: pointer;
+}
+
+.auth-switch:hover {
+  color: #53d1c7;
+}
