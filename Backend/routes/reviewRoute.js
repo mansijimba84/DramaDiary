@@ -3,11 +3,11 @@ const router = express.Router();
 const reviewController = require('../controllers/reviewcontroller');
 const authenticateUser = require('../middlewares/requireAuth'); 
 
-router.post('/reviews', authenticateUser, reviewController.createReview);
-router.get('/reviews/drama/:dramaId', reviewController.getReviewsByDrama);
-router.get('/reviews', reviewController.getAllReviews);
-router.get('/reviews/me', authenticateUser, reviewController.getMyReviews);
-router.put('/reviews/:id', authenticateUser, reviewController.updateReview);
-router.delete('/reviews/:id', authenticateUser, reviewController.deleteReview);
+router.post('/', authenticateUser, reviewController.createReview);
+router.get('/drama/:dramaId', reviewController.getReviewsByDrama);
+router.get('/all', reviewController.getAllReviews);
+router.get('/me', authenticateUser, reviewController.getMyReviews);
+router.put('/:id', authenticateUser, reviewController.updateReview);
+router.delete('/:id', authenticateUser, reviewController.deleteReview);
 
 module.exports = router;

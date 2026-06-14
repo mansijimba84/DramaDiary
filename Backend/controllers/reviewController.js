@@ -1,42 +1,48 @@
-const Review = require('../models/Review');
+const Review = require("../models/Review");
 
+/* CREATE REVIEW */
 exports.createReview = async (req, res) => {
-    const { dramaId, dramaTitle, dramaPoster, status, rating, reviewText } = req.body;
-    try {
-        const newReview = await Review.create({
-            userId: req.user._id,
-            dramaId,
-            dramaTitle,
-            dramaPoster,
-            status,
-            rating,
-            reviewText
-        });
-        return res.status(201).json({ message: 'Review created successfully', review: newReview });
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
-    }           
+  const {
+    dramaId,
+    dramaTitle,
+    dramaPoster,
+    status,
+    rating,
+    reviewText,
+  } = req.body;
+
+  try {
+    const newReview = await Review.create({
+      userId: req.user._id,
+      dramaId,
+      dramaTitle,
+      dramaPoster,
+      status,
+      rating,
+      reviewText,
+    });
+
+    res.status(201).json({
+      success: true,
+      review: newReview,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
-exports.getReviewsByDrama = async (req, res) => {
-    const { dramaId } = req.params;     
-    try {
-        const reviews = await Review.find({ dramaId }).populate('userId', 'username');
-        return res.status(200).json({ reviews });
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
-    }
-}
-
+/* GET ALL REVIEWS (COMMUNITY FEED) */
 exports.getAllReviews = async (req, res) => {
-    try {
+  try {
     const reviews = await Review.find()
       .populate("userId", "username email")
-      .populate("dramaId")
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 }) // FIX
       .limit(50);
 
-    res.status(200).json({
+    res.json({
       success: true,
       count: reviews.length,
       reviews,
@@ -44,110 +50,110 @@ exports.getAllReviews = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to fetch reviews",
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
+/* GET MY REVIEWS */
 exports.getMyReviews = async (req, res) => {
   try {
     const reviews = await Review.find({
       userId: req.user._id,
     })
-      .sort({ createdAt: -1 })
-      .populate("dramaId");
+      .populate("userId", "username")
+      .sort({ updatedAt: -1 });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      count: reviews.length,
       reviews,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to fetch your reviews",
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
+/* UPDATE REVIEW */
 exports.updateReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
-        success: false,
         message: "Review not found",
       });
     }
 
-    // Check ownership
     if (review.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
-        success: false,
-        message: "You can only update your own reviews",
+        message: "Not allowed",
       });
     }
 
-    const updatedReview = await Review.findByIdAndUpdate(
+    const updated = await Review.findByIdAndUpdate(
       req.params.id,
-      {
-        status: req.body.status,
-        rating: req.body.rating,
-        reviewText: req.body.reviewText,
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
+      req.body,
+      { new: true }
     );
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Review updated successfully",
-      review: updatedReview,
+      review: updated,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
-      message: "Failed to update review",
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
+/* DELETE REVIEW */
 exports.deleteReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
-        success: false,
         message: "Review not found",
       });
     }
 
-    // Check ownership
     if (review.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
-        success: false,
-        message: "You can only delete your own reviews",
+        message: "Not allowed",
       });
     }
 
-    await Review.findByIdAndDelete(req.params.id);
+    await review.deleteOne();
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Review deleted successfully",
+      message: "Deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
-      message: "Failed to delete review",
-      error: error.message,
+      message: error.message,
+    });
+  }
+};
+
+/* GET REVIEWS BY DRAMA */
+exports.getReviewsByDrama = async (req, res) => {
+  try {
+    const reviews = await Review.find({
+      dramaId: req.params.dramaId,
+    }).populate("userId", "username");
+
+    res.json({
+      success: true,
+      reviews,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
     });
   }
 };

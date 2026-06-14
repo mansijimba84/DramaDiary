@@ -21,7 +21,7 @@ module.exports = async function authenticateUser(req, res, next) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    req.user = user; // full user available in controllers
+    req.user = user; 
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
