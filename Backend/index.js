@@ -11,7 +11,7 @@ connectDB();
 // CORS (FIXED)
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://dramadiary.vercel.app"
+  "https://drama-diary-beryl.vercel.app"
 ];
 
 app.use(cors({
