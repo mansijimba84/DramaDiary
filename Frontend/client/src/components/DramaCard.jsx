@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
+import API from "../api";
 
 const DramaCard = ({ drama, onClick }) => {
   const [storedList, setStoredList] = useState([]);
 
   const token = localStorage.getItem("token");
-  const API = import.meta.env.VITE_API_URL;
 
   const title =
     drama.name || drama.original_name || "Untitled";
@@ -13,12 +13,11 @@ const DramaCard = ({ drama, onClick }) => {
     ? `https://image.tmdb.org/t/p/w500${drama.poster_path}`
     : null;
 
-
   const fetchList = async () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`${API}/reviews/me`, {
+      const res = await fetch(`${API}/api/reviews/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -45,7 +44,7 @@ const DramaCard = ({ drama, onClick }) => {
     if (!token) return;
 
     try {
-      await fetch(API, {
+      await fetch(`${API}/api/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,7 +60,6 @@ const DramaCard = ({ drama, onClick }) => {
         }),
       });
 
-      // refresh list after update
       fetchList();
     } catch (err) {
       console.log("Status update failed:", err.message);
