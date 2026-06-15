@@ -18,7 +18,7 @@ const DramaCard = ({ drama, onClick }) => {
     if (!token) return;
 
     try {
-      const res = await fetch(`${API}/me`, {
+      const res = await fetch(`${API}/reviews/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
