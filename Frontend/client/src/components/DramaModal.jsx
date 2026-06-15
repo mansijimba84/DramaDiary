@@ -13,6 +13,25 @@ function DramaModal({ drama, onClose }) {
 
   const token = localStorage.getItem("token");
 
+  // ✅ FETCH TMDB DETAILS
+  useEffect(() => {
+    if (!drama) return;
+
+    const fetchDetails = async () => {
+      const apiKey = import.meta.env.VITE_TMDB_KEY;
+
+      const res = await fetch(
+        `https://api.themoviedb.org/3/tv/${drama.id}?api_key=${apiKey}`
+      );
+
+      const data = await res.json();
+      setDetails(data);
+    };
+
+    fetchDetails();
+  }, [drama]);
+
+  // ✅ FETCH REVIEWS
   const fetchReviews = async () => {
     if (!drama) return;
 
@@ -25,6 +44,7 @@ function DramaModal({ drama, onClose }) {
     if (drama) fetchReviews();
   }, [drama]);
 
+  // ✅ SAVE STATUS
   const saveStatus = async (newStatus) => {
     setStatus(newStatus);
 
@@ -47,6 +67,7 @@ function DramaModal({ drama, onClose }) {
     fetchReviews();
   };
 
+  // ✅ SAVE REVIEW
   const handleSaveReview = async () => {
     await fetch(`${API}/api/reviews`, {
       method: "POST",
@@ -65,10 +86,10 @@ function DramaModal({ drama, onClose }) {
     });
 
     setShowPopup(true);
-    await fetchReviews();
+    fetchReviews();
+
     setTimeout(() => setShowPopup(false), 2000);
   };
-
 
   if (!drama) return null;
   if (!details) return <div>Loading...</div>;
@@ -76,7 +97,9 @@ function DramaModal({ drama, onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="close-btn" onClick={onClose}>×</button>
+        <button className="close-btn" onClick={onClose}>
+          ×
+        </button>
 
         <h2>{details.name}</h2>
 

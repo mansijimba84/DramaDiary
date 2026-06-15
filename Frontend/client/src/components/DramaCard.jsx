@@ -6,8 +6,7 @@ const DramaCard = ({ drama, onClick }) => {
 
   const token = localStorage.getItem("token");
 
-  const title =
-    drama.name || drama.original_name || "Untitled";
+  const title = drama.name || drama.original_name || "Untitled";
 
   const posterUrl = drama.poster_path
     ? `https://image.tmdb.org/t/p/w500${drama.poster_path}`
@@ -44,7 +43,7 @@ const DramaCard = ({ drama, onClick }) => {
     if (!token) return;
 
     try {
-      await fetch(`${API}/api/reviews`, {
+      const res = await fetch(`${API}/api/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,9 +59,11 @@ const DramaCard = ({ drama, onClick }) => {
         }),
       });
 
+      if (!res.ok) throw new Error("Request failed");
+
       fetchList();
     } catch (err) {
-      console.log("Status update failed:", err.message);
+      console.log(err.message);
     }
   };
 
@@ -77,22 +78,22 @@ const DramaCard = ({ drama, onClick }) => {
 
         <div className="status-buttons">
           <button
-            className={activeStatus === "Watching" ? "active" : ""}
             onClick={(e) => handleStatus(e, "Watching")}
+            className={activeStatus === "Watching" ? "active" : ""}
           >
             Watching
           </button>
 
           <button
-            className={activeStatus === "Watched" ? "active" : ""}
             onClick={(e) => handleStatus(e, "Watched")}
+            className={activeStatus === "Watched" ? "active" : ""}
           >
             Watched
           </button>
 
           <button
-            className={activeStatus === "Plan" ? "active" : ""}
             onClick={(e) => handleStatus(e, "Plan")}
+            className={activeStatus === "Plan" ? "active" : ""}
           >
             Plan
           </button>

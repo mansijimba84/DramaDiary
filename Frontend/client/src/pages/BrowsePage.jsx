@@ -84,7 +84,7 @@ function BrowsePage() {
         {!loading && !error && (
           <DramaGrid
             dramas={dramas}
-            onSelectDrama={setSelectedDrama}
+             onSelectDrama={(drama) => setSelectedDrama(drama)}
           />
         )}
 
