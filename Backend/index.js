@@ -2,20 +2,33 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const connectDB = require("./config/db");
 
 const app = express();
 
 connectDB();
 
-app.use(cors());
+// CORS (FIXED)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dramadiary.vercel.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
-const authRoutes = require("./routes/auth");
-const reviewRoutes = require("./routes/reviewRoute");
-
-app.use("/api/auth", authRoutes);
-app.use("/api/reviews", reviewRoutes);
+// routes
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/reviews", require("./routes/reviewRoute"));
 
 module.exports = app;
