@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import API from "../api";
 
 function Stats() {
   const [dramas, setDramas] = useState([]);
 
   const token = localStorage.getItem("token");
-  const API = "http://localhost:5050/api/reviews";
 
   const fetchData = async () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`${API}/me`, {
+      const res = await fetch(`${API}/api/reviews/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

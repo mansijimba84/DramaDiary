@@ -4,7 +4,7 @@ const DramaCard = ({ drama, onClick }) => {
   const [storedList, setStoredList] = useState([]);
 
   const token = localStorage.getItem("token");
-  const API = "http://localhost:5050/api/reviews";
+  const API = import.meta.env.VITE_API_URL;
 
   const title =
     drama.name || drama.original_name || "Untitled";

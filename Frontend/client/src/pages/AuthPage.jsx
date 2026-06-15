@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api";
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,8 +23,8 @@ function Auth() {
     e.preventDefault();
 
     const url = isLogin
-      ? "http://localhost:5050/api/auth/login"
-      : "http://localhost:5050/api/auth/signup";
+      ? API + "/api/auth/login"
+      : API + "/api/auth/signup";
 
     const payload = isLogin
       ? {
@@ -48,19 +49,16 @@ function Auth() {
         return;
       }
 
-      // ✅ store auth data
       localStorage.setItem("token", data.token);
 
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      // 🔥 IMPORTANT: notify navbar instantly
       window.dispatchEvent(new Event("auth-change"));
 
       alert(isLogin ? "Login successful" : "Signup successful");
 
-      // redirect to browse
       navigate("/");
     } catch (err) {
       console.error(err);

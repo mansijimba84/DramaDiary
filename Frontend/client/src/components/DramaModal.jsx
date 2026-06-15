@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import StarRating from "./StarRating";
+import API from "../api";
 
 function DramaModal({ drama, onClose }) {
   const [details, setDetails] = useState(null);
@@ -11,38 +12,11 @@ function DramaModal({ drama, onClose }) {
   const [showPopup, setShowPopup] = useState(false);
 
   const token = localStorage.getItem("token");
-  const API = "http://localhost:5050/api/reviews";
-
-  useEffect(() => {
-    if (!drama) return;
-
-    setDetails(null);
-    setReviews([]);
-    setRating(0);
-    setReviewText("");
-    setStatus("Plan");
-  }, [drama]);
-
-  useEffect(() => {
-    if (!drama) return;
-
-    const apiKey = import.meta.env.VITE_TMDB_KEY;
-
-    const fetchDetails = async () => {
-      const res = await fetch(
-        `https://api.themoviedb.org/3/tv/${drama.id}?api_key=${apiKey}`
-      );
-      const data = await res.json();
-      setDetails(data);
-    };
-
-    fetchDetails();
-  }, [drama]);
 
   const fetchReviews = async () => {
     if (!drama) return;
 
-    const res = await fetch(`${API}/drama/${drama.id}`);
+    const res = await fetch(`${API}/api/reviews/drama/${drama.id}`);
     const data = await res.json();
     setReviews(data.reviews || []);
   };
@@ -51,11 +25,10 @@ function DramaModal({ drama, onClose }) {
     if (drama) fetchReviews();
   }, [drama]);
 
-  // ✅ NEW: SAVE STATUS WHEN BUTTON CLICKED
   const saveStatus = async (newStatus) => {
     setStatus(newStatus);
 
-    await fetch(API, {
+    await fetch(`${API}/api/reviews`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,7 +48,7 @@ function DramaModal({ drama, onClose }) {
   };
 
   const handleSaveReview = async () => {
-    await fetch(API, {
+    await fetch(`${API}/api/reviews`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -96,6 +69,7 @@ function DramaModal({ drama, onClose }) {
     setTimeout(() => setShowPopup(false), 2000);
   };
 
+
   if (!drama) return null;
   if (!details) return <div>Loading...</div>;
 
@@ -113,7 +87,7 @@ function DramaModal({ drama, onClose }) {
 
         <p>{details.overview}</p>
 
-        {/* STATUS (UI SAME) */}
+        {/* STATUS */}
         <div className="status-buttons">
           <button
             className={status === "Plan" ? "active" : ""}
@@ -137,7 +111,7 @@ function DramaModal({ drama, onClose }) {
           </button>
         </div>
 
-        {/* REVIEW FORM (UNCHANGED UI) */}
+        {/* REVIEW */}
         {status === "Watched" && (
           <div className="review-section">
             <h3>Your Review</h3>

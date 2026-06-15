@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import API from "../api";
 
 const MyListPage = () => {
   const [reviews, setReviews] = useState([]);
   const token = localStorage.getItem("token");
 
-  const API = "http://localhost:5050/api/reviews";
-
   const fetchReviews = async () => {
-    const res = await fetch(`${API}/me`, {
+    const res = await fetch(`${API}/api/reviews/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -21,7 +20,7 @@ const MyListPage = () => {
   }, []);
 
   const updateReview = async (id, updates) => {
-    const res = await fetch(`${API}/${id}`, {
+    const res = await fetch(`${API}/api/reviews/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -40,7 +39,7 @@ const MyListPage = () => {
   };
 
   const removeDrama = async (id) => {
-    await fetch(`${API}/${id}`, {
+    await fetch(`${API}/api/reviews/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -87,7 +86,7 @@ const MyListPage = () => {
                   {/* STARS */}
                   {drama.status === "Watched" && (
                     <div>
-                      {[1,2,3,4,5].map((s) => (
+                      {[1, 2, 3, 4, 5].map((s) => (
                         <span
                           key={s}
                           onClick={() =>
@@ -95,7 +94,7 @@ const MyListPage = () => {
                           }
                           style={{
                             cursor: "pointer",
-                            color: s <= drama.rating ? "gold" : "gray"
+                            color: s <= drama.rating ? "gold" : "gray",
                           }}
                         >
                           ★
