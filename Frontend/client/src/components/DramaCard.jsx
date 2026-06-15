@@ -3,25 +3,8 @@ import React, { useEffect, useState } from "react";
 const DramaCard = ({ drama, onClick }) => {
   const [storedList, setStoredList] = useState([]);
 
-  useEffect(() => {
-    const update = () => {
-      const data = JSON.parse(
-        localStorage.getItem("dramaList") || "[]"
-      );
-      setStoredList(data);
-    };
-
-    update(); // initial load
-
-    window.addEventListener("storage-update", update);
-
-    return () =>
-      window.removeEventListener("storage-update", update);
-  }, []);
-
-  const activeStatus = storedList.find(
-    (item) => item.id === drama.id
-  )?.status;
+  const token = localStorage.getItem("token");
+  const API = "http://localhost:5050/api/reviews";
 
   const title =
     drama.name || drama.original_name || "Untitled";
@@ -30,37 +13,59 @@ const DramaCard = ({ drama, onClick }) => {
     ? `https://image.tmdb.org/t/p/w500${drama.poster_path}`
     : null;
 
-  const handleStatus = (e, status) => {
+
+  const fetchList = async () => {
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API}/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setStoredList(data.reviews || []);
+    } catch (err) {
+      console.log("Failed to fetch list:", err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchList();
+  }, []);
+
+  const activeStatus = storedList.find(
+    (item) => item.dramaId === drama.id
+  )?.status;
+
+  const handleStatus = async (e, status) => {
     e.stopPropagation();
 
-    const current = JSON.parse(
-      localStorage.getItem("dramaList") || "[]"
-    );
+    if (!token) return;
 
-    const exists = current.find((item) => item.id === drama.id);
-
-    let updated;
-
-    if (exists) {
-      updated = current.map((item) =>
-        item.id === drama.id
-          ? { ...item, status, title, poster: drama.poster_path }
-          : item
-      );
-    } else {
-      updated = [
-        ...current,
-        {
-          id: drama.id,
-          title,
-          poster: drama.poster_path,
-          status,
+    try {
+      await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      ];
-    }
+        body: JSON.stringify({
+          dramaId: drama.id,
+          dramaTitle: title,
+          dramaPoster: drama.poster_path,
+          status,
+          rating: 0,
+          reviewText: "",
+        }),
+      });
 
-    localStorage.setItem("dramaList", JSON.stringify(updated));
-    window.dispatchEvent(new Event("storage-update"));
+      // refresh list after update
+      fetchList();
+    } catch (err) {
+      console.log("Status update failed:", err.message);
+    }
   };
 
   return (
@@ -74,22 +79,22 @@ const DramaCard = ({ drama, onClick }) => {
 
         <div className="status-buttons">
           <button
-            className={activeStatus === "watching" ? "active" : ""}
-            onClick={(e) => handleStatus(e, "watching")}
+            className={activeStatus === "Watching" ? "active" : ""}
+            onClick={(e) => handleStatus(e, "Watching")}
           >
             Watching
           </button>
 
           <button
-            className={activeStatus === "watched" ? "active" : ""}
-            onClick={(e) => handleStatus(e, "watched")}
+            className={activeStatus === "Watched" ? "active" : ""}
+            onClick={(e) => handleStatus(e, "Watched")}
           >
             Watched
           </button>
 
           <button
-            className={activeStatus === "plan" ? "active" : ""}
-            onClick={(e) => handleStatus(e, "plan")}
+            className={activeStatus === "Plan" ? "active" : ""}
+            onClick={(e) => handleStatus(e, "Plan")}
           >
             Plan
           </button>

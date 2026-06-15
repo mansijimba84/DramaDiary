@@ -1,130 +1,108 @@
 import { useEffect, useState } from "react";
-import useLocalStorage from "../hooks/LocalStorage";
 import StarRating from "./StarRating";
 
 function DramaModal({ drama, onClose }) {
   const [details, setDetails] = useState(null);
-  const [cast, setCast] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
-  const [dramas, setDramas] = useLocalStorage("dramaList", []);
-
-  const existing = dramas.find((d) => d.id === drama?.id);
-  const status = existing?.status || null;
-
+  const [status, setStatus] = useState("Plan");
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
-  // reset when drama changes
-  useEffect(() => {
-    if (existing) {
-      setRating(existing.rating || 0);
-      setReviewText(existing.reviewText || "");
-    } else {
-      setRating(0);
-      setReviewText("");
-    }
-  }, [drama?.id]);
+  const token = localStorage.getItem("token");
+  const API = "http://localhost:5050/api/reviews";
 
-  // fetch data
+  useEffect(() => {
+    if (!drama) return;
+
+    setDetails(null);
+    setReviews([]);
+    setRating(0);
+    setReviewText("");
+    setStatus("Plan");
+  }, [drama]);
+
   useEffect(() => {
     if (!drama) return;
 
     const apiKey = import.meta.env.VITE_TMDB_KEY;
 
-    const fetchData = async () => {
-      const detailsRes = await fetch(
+    const fetchDetails = async () => {
+      const res = await fetch(
         `https://api.themoviedb.org/3/tv/${drama.id}?api_key=${apiKey}`
       );
-      const detailsData = await detailsRes.json();
-
-      const castRes = await fetch(
-        `https://api.themoviedb.org/3/tv/${drama.id}/credits?api_key=${apiKey}`
-      );
-      const castData = await castRes.json();
-
-      setDetails(detailsData);
-      setCast(castData.cast?.slice(0, 5) || []);
+      const data = await res.json();
+      setDetails(data);
     };
 
-    fetchData();
+    fetchDetails();
   }, [drama]);
 
-  // escape close
+  const fetchReviews = async () => {
+    if (!drama) return;
+
+    const res = await fetch(`${API}/drama/${drama.id}`);
+    const data = await res.json();
+    setReviews(data.reviews || []);
+  };
+
   useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") onClose();
-    };
+    if (drama) fetchReviews();
+  }, [drama]);
 
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  // ✅ NEW: SAVE STATUS WHEN BUTTON CLICKED
+  const saveStatus = async (newStatus) => {
+    setStatus(newStatus);
 
-  const updateItem = (updates) => {
-    const title = drama.name || drama.original_name || "Untitled";
-
-    setDramas((prev) => {
-      const exists = prev.find((d) => d.id === drama.id);
-
-      let updated;
-
-      if (exists) {
-        updated = prev.map((item) =>
-          item.id === drama.id
-            ? {
-                ...item,
-                ...updates,
-                updatedAt: new Date().toISOString(),
-              }
-            : item
-        );
-      } else {
-        updated = [
-          ...prev,
-          {
-            id: drama.id,
-            title,
-            poster: drama.poster_path,
-            status: updates.status || "plan",
-            rating: 0,
-            reviewText: "",
-            updatedAt: new Date().toISOString(),
-            ...updates,
-          },
-        ];
-      }
-
-      localStorage.setItem("dramaList", JSON.stringify(updated));
-      return updated;
+    await fetch(API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        dramaId: drama.id,
+        dramaTitle: drama.name,
+        dramaPoster: drama.poster_path,
+        status: newStatus,
+        rating,
+        reviewText,
+      }),
     });
+
+    fetchReviews();
   };
 
-  const handleStatusChange = (value) => {
-    updateItem({ status: value });
-  };
-
-  const handleSaveReview = () => {
-    updateItem({
-      rating,
-      reviewText,
-      status: "watched",
+  const handleSaveReview = async () => {
+    await fetch(API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        dramaId: drama.id,
+        dramaTitle: drama.name,
+        dramaPoster: drama.poster_path,
+        status,
+        rating,
+        reviewText,
+      }),
     });
 
     setShowPopup(true);
-    setRating(0);
-    setReviewText("");
-
+    await fetchReviews();
     setTimeout(() => setShowPopup(false), 2000);
   };
 
-  if (!details) return null;
+  if (!drama) return null;
+  if (!details) return <div>Loading...</div>;
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="close-btn" onClick={onClose}>
-          ×
-        </button>
+        <button className="close-btn" onClick={onClose}>×</button>
 
         <h2>{details.name}</h2>
 
@@ -135,60 +113,68 @@ function DramaModal({ drama, onClose }) {
 
         <p>{details.overview}</p>
 
-        {/* STATUS */}
+        {/* STATUS (UI SAME) */}
         <div className="status-buttons">
           <button
-            className={status === "plan" ? "active" : ""}
-            onClick={() => handleStatusChange("plan")}
+            className={status === "Plan" ? "active" : ""}
+            onClick={() => saveStatus("Plan")}
           >
             Plan
           </button>
 
           <button
-            className={status === "watching" ? "active" : ""}
-            onClick={() => handleStatusChange("watching")}
+            className={status === "Watching" ? "active" : ""}
+            onClick={() => saveStatus("Watching")}
           >
             Watching
           </button>
 
           <button
-            className={status === "watched" ? "active" : ""}
-            onClick={() => handleStatusChange("watched")}
+            className={status === "Watched" ? "active" : ""}
+            onClick={() => saveStatus("Watched")}
           >
             Watched
           </button>
         </div>
 
-        {/* REVIEW SECTION */}
-        {status === "watched" && (
+        {/* REVIEW FORM (UNCHANGED UI) */}
+        {status === "Watched" && (
           <div className="review-section">
             <h3>Your Review</h3>
 
-            <div className="star-rating">
-              <StarRating value={rating} onChange={setRating} />
-            </div>
+            <StarRating value={rating} onChange={setRating} />
 
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Write your review (optional)"
               className="review-textarea"
             />
 
-            <button
-              className="review-save-btn"
-              onClick={handleSaveReview}
-            >
+            <button onClick={handleSaveReview} className="review-save-btn">
               Save Review
             </button>
           </div>
         )}
 
-        {/* POPUP */}
+        {/* REVIEWS */}
+        <div className="reviews-list">
+          <h3>All Reviews</h3>
+
+          {reviews.length === 0 ? (
+            <p>No reviews yet</p>
+          ) : (
+            reviews.map((r) => (
+              <div key={r._id} className="review-card">
+                <p><b>{r.userId?.username}</b></p>
+                <p>⭐ {r.rating}</p>
+                <p>{r.reviewText}</p>
+              </div>
+            ))
+          )}
+        </div>
+
         {showPopup && (
-          <div className="review-popup">
-            Review Saved ✔
-          </div>
+          <div className="review-popup">Review Saved ✔</div>
         )}
       </div>
     </div>

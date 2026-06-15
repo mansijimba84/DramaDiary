@@ -1,44 +1,63 @@
-import { useMemo } from "react";
-import useLocalStorage from "../hooks/LocalStorage";
+import { useEffect, useMemo, useState } from "react";
 
 function Stats() {
-  const [dramas] = useLocalStorage("dramaList", []);
+  const [dramas, setDramas] = useState([]);
 
-  // only watched dramas
-  const watched = dramas.filter((d) => d.status === "watched");
+  const token = localStorage.getItem("token");
+  const API = "http://localhost:5050/api/reviews";
 
-  // total watched
-  const totalWatched = watched.length;
+  const fetchData = async () => {
+    if (!token) return;
 
-  // average rating
+    try {
+      const res = await fetch(`${API}/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setDramas(data.reviews || []);
+    } catch (err) {
+      console.log("Failed to fetch stats:", err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const Watched = useMemo(() => {
+    return dramas.filter((d) => d.status === "Watched");
+  }, [dramas]);
+
+  const totalWatched = Watched.length;
+
   const averageRating = useMemo(() => {
-    if (watched.length === 0) return 0;
+    if (Watched.length === 0) return 0;
 
-    const sum = watched.reduce((acc, d) => acc + (d.rating || 0), 0);
-    return (sum / watched.length).toFixed(1);
-  }, [watched]);
+    const sum = Watched.reduce((acc, d) => acc + (d.rating || 0), 0);
+    return (sum / Watched.length).toFixed(1);
+  }, [Watched]);
 
-  // top pick
   const topDrama = useMemo(() => {
-    if (watched.length === 0) return null;
+    if (Watched.length === 0) return null;
 
-    return [...watched].sort(
+    return [...Watched].sort(
       (a, b) => (b.rating || 0) - (a.rating || 0)
     )[0];
-  }, [watched]);
+  }, [Watched]);
 
-  // estimated hours (episodes * 60 mins)
   const totalHours = useMemo(() => {
-    return watched.reduce((acc, d) => {
+    return Watched.reduce((acc, d) => {
       return acc + ((d.episodes || 0) * 60);
     }, 0);
-  }, [watched]);
+  }, [Watched]);
 
-  // rating distribution (1–5 stars)
   const distribution = useMemo(() => {
     const dist = Array(5).fill(0);
 
-    watched.forEach((d) => {
+    Watched.forEach((d) => {
       const r = Math.round(d.rating || 0);
       if (r >= 1 && r <= 5) {
         dist[r - 1]++;
@@ -46,11 +65,11 @@ function Stats() {
     });
 
     return dist;
-  }, [watched]);
+  }, [Watched]);
 
   const maxCount = Math.max(...distribution, 1);
 
-  if (watched.length === 0) {
+  if (Watched.length === 0) {
     return (
       <div className="stats-page">
         <h1>Stats</h1>
@@ -77,7 +96,7 @@ function Stats() {
 
         <div className="stat-card">
           <h3>Top Pick</h3>
-          <p>{topDrama?.title || "N/A"}</p>
+          <p>{topDrama?.dramaTitle || "N/A"}</p>
         </div>
 
         <div className="stat-card">

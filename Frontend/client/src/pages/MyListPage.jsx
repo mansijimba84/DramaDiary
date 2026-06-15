@@ -1,30 +1,55 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import useLocalStorage from "../hooks/LocalStorage";
 
 const MyListPage = () => {
-  const [dramas, setDramas] = useLocalStorage("dramaList", []);
+  const [reviews, setReviews] = useState([]);
+  const token = localStorage.getItem("token");
 
-  const removeDrama = (id) => {
-    setDramas((prev) => prev.filter((item) => item.id !== id));
+  const API = "http://localhost:5050/api/reviews";
+
+  const fetchReviews = async () => {
+    const res = await fetch(`${API}/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    setReviews(data.reviews || []);
   };
 
-  const changeStatus = (id, status) => {
-    setDramas((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, status, updatedAt: new Date().toISOString() }
-          : item
-      )
-    );
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const updateReview = async (id, updates) => {
+    const res = await fetch(`${API}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updates),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setReviews((prev) =>
+        prev.map((r) => (r._id === id ? data.review : r))
+      );
+    }
   };
 
-  const renderStars = (rating = 0) => {
-    return "★".repeat(rating) + "☆".repeat(5 - rating);
+  const removeDrama = async (id) => {
+    await fetch(`${API}/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setReviews((prev) => prev.filter((r) => r._id !== id));
   };
 
   const renderSection = (title, status) => {
-    const filtered = dramas.filter((d) => d.status === status);
+    const filtered = reviews.filter((r) => r.status === status);
 
     return (
       <div className="section">
@@ -38,64 +63,57 @@ const MyListPage = () => {
         ) : (
           <div className="row">
             {filtered.map((drama) => (
-              <div key={drama.id} className="card">
+              <div key={drama._id} className="card">
 
-                {/* POSTER */}
                 <img
-                  src={`https://image.tmdb.org/t/p/w300${drama.poster}`}
-                  alt={drama.title}
+                  src={`https://image.tmdb.org/t/p/w300${drama.dramaPoster}`}
                 />
 
                 <div className="card-content">
-                  <h3>{drama.title}</h3>
+                  <h3>{drama.dramaTitle}</h3>
 
-                  {/* STATUS SELECT */}
+                  {/* STATUS */}
                   <select
                     value={drama.status}
                     onChange={(e) =>
-                      changeStatus(drama.id, e.target.value)
+                      updateReview(drama._id, { status: e.target.value })
                     }
                   >
-                    <option value="plan">Plan</option>
-                    <option value="watching">Watching</option>
-                    <option value="watched">Watched</option>
+                    <option value="Plan">Plan</option>
+                    <option value="Watching">Watching</option>
+                    <option value="Watched">Watched</option>
                   </select>
 
-                  {/* ⭐ REVIEW SECTION */}
-                  {drama.status === "watched" && (
-                    <div style={{ marginTop: "8px" }}>
-
-                      {/* STARS */}
-                      <div
-                        style={{
-                          color: "#facc15",
-                          fontSize: "24px",
-                          marginBottom: "4px"
-                        }}
-                      >
-                        {renderStars(drama.rating || 0)}
-                      </div>
-
-                      {/* REVIEW TEXT */}
-                      {drama.reviewText && (
-                        <p
+                  {/* STARS */}
+                  {drama.status === "Watched" && (
+                    <div>
+                      {[1,2,3,4,5].map((s) => (
+                        <span
+                          key={s}
+                          onClick={() =>
+                            updateReview(drama._id, { rating: s })
+                          }
                           style={{
-                            fontSize: "12px",
-                            color: "#555",
-                            lineHeight: "1.4"
+                            cursor: "pointer",
+                            color: s <= drama.rating ? "gold" : "gray"
                           }}
                         >
-                          {drama.reviewText}
-                        </p>
-                      )}
+                          ★
+                        </span>
+                      ))}
+
+                      <textarea
+                        value={drama.reviewText || ""}
+                        onChange={(e) =>
+                          updateReview(drama._id, {
+                            reviewText: e.target.value,
+                          })
+                        }
+                      />
                     </div>
                   )}
 
-                  {/* REMOVE BUTTON */}
-                  <button
-                    className="remove-btn"
-                    onClick={() => removeDrama(drama.id)}
-                  >
+                  <button onClick={() => removeDrama(drama._id)}>
                     Remove
                   </button>
                 </div>
@@ -109,15 +127,11 @@ const MyListPage = () => {
 
   return (
     <div className="mylist-page">
-      <header className="mylist-header">
-        <h1 className="page-title">My Drama List</h1>
-      </header>
+      <h1>My Drama List</h1>
 
-      <div className="mylist-content">
-        {renderSection("Plan", "plan")}
-        {renderSection("Watching", "watching")}
-        {renderSection("Watched", "watched")}
-      </div>
+      {renderSection("Plan", "Plan")}
+      {renderSection("Watching", "Watching")}
+      {renderSection("Watched", "Watched")}
     </div>
   );
 };
